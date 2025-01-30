@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package input.v1;
+
+message ReadRequest {
+  string path = 1;
+}
+
+message ReadResponse {
+  
+}
+
+service Inputer {
+  rpc Read(ReadRequest) returns (ReadResponse);
+}

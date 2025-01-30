@@ -1,0 +1,15 @@
+# For details on buf.yaml configuration, visit https://buf.build/docs/configuration/v2/buf-yaml
+version: v2
+modules:
+  #- path: proto/input
+    #name: buf.build/kubeplate/inputapi
+  #- path: proto/output
+    #name: buf.build/kubeplate/outputapi
+  - path: proto
+    name: buf.build/kubeplate/apis
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

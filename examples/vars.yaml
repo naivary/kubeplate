@@ -1,0 +1,4 @@
+image: "nginx:v1.22.3" 
+host:
+  - grafana.mh.com
+  - minio.mh.com

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package output.v1;
+
+message WriteRequest {}
+message WriteResponse {}
+
+service Outputer {
+  rpc Write(WriteRequest) returns (WriteResponse);
+}

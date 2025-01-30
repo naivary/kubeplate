@@ -13,5 +13,7 @@ knowledge about the go templating.
 - [] Extensible Design of the Output Destination (s3, local etc.)
 - [] Automatic generation of needed manifests e.g. namespaces, services for
   deployment etc.
+- [] Possibility to generate multiple manifest from one array e.g. each element
+  = one manifest
 
 

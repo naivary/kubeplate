@@ -1,0 +1,26 @@
+version: v2
+clean: true
+managed:
+  enabled: true
+  override:
+    - file_option: go_package
+      module: buf.build/kubeplate/apis
+      path: input/v1
+      value: github.com/naivary/kubeplate/api/input/v1
+    - file_option: go_package
+      module: buf.build/kubeplate/apis
+      path: output/v1
+      value: github.com/naivary/kubeplate/api/output/v1
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: api
+    opt:
+    - paths=import
+    - module=github.com/naivary/kubeplate/api
+  - remote: buf.build/connectrpc/go
+    out: api
+    opt: 
+    - paths=import
+    - module=github.com/naivary/kubeplate/api
+inputs:
+  - directory: proto
