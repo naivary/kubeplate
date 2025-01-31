@@ -2,6 +2,9 @@ version: v2
 clean: true
 managed:
   enabled: true
+  disable:
+    - file_option: go_package_prefix
+      module: buf.build/bufbuild/protovalidate
   override:
     - file_option: go_package
       module: buf.build/kubeplate/apis
