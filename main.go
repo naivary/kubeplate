@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	v1 "github.com/naivary/kubeplate/api/input/v1"
 	"github.com/naivary/kubeplate/sdk/inputer"
@@ -29,24 +29,27 @@ func run() error {
 			plugin.ProtocolGRPC,
 		},
 	})
+	defer client.Kill()
+
 	rpcClient, err := client.Client()
 	if err != nil {
 		return err
 	}
+
 	raw, err := rpcClient.Dispense("inputer")
 	if err != nil {
 		return err
 	}
-	impl := raw.(inputer.Inputer)
-	req := &v1.ReadRequest{
+
+	inputer := raw.(inputer.Inputer)
+
+	ctx := context.Background()
+	res, err := inputer.Read(ctx, &v1.ReadRequest{
 		Path: "vars.json",
-	}
-	res, err := impl.Read(context.Background(), req)
+	})
 	if err != nil {
 		return err
 	}
-	logger := hclog.New(hclog.DefaultOptions)
-	logger.Info("got the res", "res", res.Data)
-	client.Kill()
+	fmt.Println(res.Data)
 	return nil
 }

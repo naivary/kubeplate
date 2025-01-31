@@ -25,8 +25,7 @@ func (p *GRPCPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, 
 
 type GRPCClient struct{ client v1.InputerClient }
 
-func (m *GRPCClient) Read(req *v1.ReadRequest) (*v1.ReadResponse, error) {
-	ctx := context.Background()
+func (m *GRPCClient) Read(ctx context.Context, req *v1.ReadRequest) (*v1.ReadResponse, error) {
 	return m.client.Read(ctx, req)
 
 }
