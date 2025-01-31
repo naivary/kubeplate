@@ -1,13 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"plugin"
-	"text/template"
-)
+	"os"
+	"os/exec"
 
-const symbolName = "Funcs"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin"
+	v1 "github.com/naivary/kubeplate/api/input/v1"
+	"github.com/naivary/kubeplate/sdk/inputer"
+)
 
 func main() {
 	if err := run(); err != nil {
@@ -16,18 +19,34 @@ func main() {
 }
 
 func run() error {
-	pl, err := plugin.Open("plugin/plugin_1.so")
+	client := plugin.NewClient(&plugin.ClientConfig{
+		HandshakeConfig: inputer.Handshake,
+		Plugins: map[string]plugin.Plugin{
+			"inputer": &inputer.GRPCPlugin{},
+		},
+		Cmd: exec.Command("sh", "-c", os.Getenv("INPUTER_PLUGIN")),
+		AllowedProtocols: []plugin.Protocol{
+			plugin.ProtocolGRPC,
+		},
+	})
+	rpcClient, err := client.Client()
 	if err != nil {
 		return err
 	}
-	symbol, err := pl.Lookup(symbolName)
+	raw, err := rpcClient.Dispense("inputer")
 	if err != nil {
 		return err
 	}
-	funcs, isFuncs := symbol.(*template.FuncMap)
-	if !isFuncs {
-		return fmt.Errorf("symbol has to be of type `template.FuncMap`")
+	impl := raw.(inputer.Inputer)
+	req := &v1.ReadRequest{
+		Path: "vars.json",
 	}
-	fmt.Println(funcs)
+	res, err := impl.Read(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	logger := hclog.New(hclog.DefaultOptions)
+	logger.Info("got the res", "res", res.Data)
+	client.Kill()
 	return nil
 }
