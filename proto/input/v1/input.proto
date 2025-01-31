@@ -3,9 +3,10 @@ syntax = "proto3";
 package input.v1;
 
 import "google/protobuf/any.proto";
+import "buf/validate/validate.proto";
 
 message ReadRequest {
-  string path = 1;
+  string path = 1 [(buf.validate.field).string.min_len = 1];
 }
 
 message ReadResponse {

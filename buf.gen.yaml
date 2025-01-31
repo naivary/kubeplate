@@ -17,10 +17,10 @@ plugins:
     opt:
     - paths=import
     - module=github.com/naivary/kubeplate/api
-  - remote: buf.build/connectrpc/go
+  - remote: buf.build/grpc/go:v1.5.1
     out: api
     opt: 
-    - paths=import
-    - module=github.com/naivary/kubeplate/api
+      - paths=import
+      - module=github.com/naivary/kubeplate/api
 inputs:
   - directory: proto
