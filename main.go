@@ -2,13 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/hashicorp/go-plugin"
-	v1 "github.com/naivary/kubeplate/api/input/v1"
+	v1 "github.com/naivary/kubeplate/api/inputer/v1"
 	"github.com/naivary/kubeplate/sdk/inputer"
 )
 
@@ -35,21 +34,18 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
 	raw, err := rpcClient.Dispense("inputer")
 	if err != nil {
 		return err
 	}
 
 	inputer := raw.(inputer.Inputer)
-
 	ctx := context.Background()
-	res, err := inputer.Read(ctx, &v1.ReadRequest{
-		Path: "vars.json",
+	_, err = inputer.Read(ctx, &v1.ReadRequest{
+		Url: "file://vars.json",
 	})
 	if err != nil {
 		return err
 	}
-	fmt.Println(res.Data)
 	return nil
 }

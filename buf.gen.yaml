@@ -8,12 +8,12 @@ managed:
   override:
     - file_option: go_package
       module: buf.build/kubeplate/apis
-      path: input/v1
-      value: github.com/naivary/kubeplate/api/input/v1
+      path: inputer/v1
+      value: github.com/naivary/kubeplate/api/inputer/v1
     - file_option: go_package
       module: buf.build/kubeplate/apis
-      path: output/v1
-      value: github.com/naivary/kubeplate/api/output/v1
+      path: outputer/v1
+      value: github.com/naivary/kubeplate/api/outputer/v1
 plugins:
   - remote: buf.build/protocolbuffers/go
     out: api

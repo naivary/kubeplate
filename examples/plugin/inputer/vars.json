@@ -1,4 +1,10 @@
 {
     "name": "kubeplate",
-    "age": 3
+    "age": 3,
+    "pods": [
+        {
+            "name": "some name",
+            "image": "nginx:v1"
+        }
+    ]
 }

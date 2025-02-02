@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/go-plugin"
-	v1 "github.com/naivary/kubeplate/api/input/v1"
+	v1 "github.com/naivary/kubeplate/api/inputer/v1"
 	"google.golang.org/grpc"
 )
 
