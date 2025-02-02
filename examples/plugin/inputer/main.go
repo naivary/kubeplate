@@ -56,8 +56,6 @@ func (j *jsonInputer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.ReadRe
 	if err != nil {
 		return nil, err
 	}
-	j.l.Error("this is a error log from the plugin")
-	j.l.Info("this is a info log from the plugin")
 	return &v1.ReadResponse{
 		Data: map[string]*structpb.Struct{
 			"vars.json": str.GetStructValue(),

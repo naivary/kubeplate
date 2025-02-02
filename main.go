@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/hashicorp/go-plugin"
 	v1 "github.com/naivary/kubeplate/api/inputer/v1"
+	"github.com/naivary/kubeplate/builtin"
 	"github.com/naivary/kubeplate/sdk/inputer"
 )
 
@@ -41,11 +43,16 @@ func run() error {
 
 	inputer := raw.(inputer.Inputer)
 	ctx := context.Background()
-	_, err = inputer.Read(ctx, &v1.ReadRequest{
+	res, err := inputer.Read(ctx, &v1.ReadRequest{
 		Url: "file://vars.json",
 	})
 	if err != nil {
 		return err
 	}
+	el, err := builtin.Get(res.Data)("vars.json", "name")
+	if err != nil {
+		return err
+	}
+	fmt.Printf("this is the elements values: %v\n", el)
 	return nil
 }
