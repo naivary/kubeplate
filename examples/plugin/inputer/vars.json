@@ -1,9 +1,9 @@
 {
     "name": "kubeplate",
     "age": 3,
+    "deployment-name": "nginx",
     "pods": [
         {
-            "name": "some name",
             "image": "nginx:v1"
         }
     ]

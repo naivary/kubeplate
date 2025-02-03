@@ -2,14 +2,14 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"text/template"
 
 	"github.com/hashicorp/go-plugin"
 	v1 "github.com/naivary/kubeplate/api/inputer/v1"
-	"github.com/naivary/kubeplate/builtin"
+	"github.com/naivary/kubeplate/funcs"
 	"github.com/naivary/kubeplate/sdk/inputer"
 )
 
@@ -49,10 +49,14 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	el, err := builtin.Get(res.Data)("vars.json", "name")
+	fns := template.FuncMap{
+		"get": funcs.Get(res.Data),
+	}
+	t := template.New("nginx.yaml.tmpl").Funcs(fns)
+	t, err = t.ParseFiles("./examples/templates/nginx.yaml.tmpl")
 	if err != nil {
 		return err
 	}
-	fmt.Printf("this is the elements values: %v\n", el)
-	return nil
+	err = t.Execute(os.Stdout, nil)
+	return err
 }

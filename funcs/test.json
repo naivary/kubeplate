@@ -1,0 +1,8 @@
+{
+    "name": "kubeplate",
+    "arr": [
+        {
+            "key": "value"
+        }
+    ]
+}
