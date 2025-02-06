@@ -1,0 +1,5 @@
+funcs:
+  - name: "example"
+    url: "file://examples/funcs/custom"
+    version: "latest"
+

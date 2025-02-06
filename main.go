@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 	v1 "github.com/naivary/kubeplate/api/inputer/v1"
+	"github.com/naivary/kubeplate/engine"
 	"github.com/naivary/kubeplate/funcs"
 	"github.com/naivary/kubeplate/sdk/inputer"
 )
@@ -46,6 +47,14 @@ func run() error {
 	res, err := inputer.Read(ctx, &v1.ReadRequest{
 		Url: "file://vars.json",
 	})
+	if err != nil {
+		return err
+	}
+	eng, err := engine.New("kubeplate.yaml")
+	if err != nil {
+		return err
+	}
+	err = eng.AddPlugin("file::examples/plugin/inputer/json_inputer")
 	if err != nil {
 		return err
 	}
