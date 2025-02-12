@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	v1 "github.com/naivary/kubeplate/api/inputer/v1"
@@ -43,8 +46,25 @@ type jsonInputer struct {
 }
 
 func (j *jsonInputer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.ReadResponse, error) {
-	j.l.Info(req.Url)
-	data, err := os.ReadFile("./examples/plugin/inputer/vars.json")
+	const defaultTempDir = ""
+	tmpDir, err := os.MkdirTemp(defaultTempDir, "getter")
+	if err != nil {
+		return nil, err
+	}
+	err = getter.GetAny(tmpDir, req.Url, getter.ClientOption(func(c *getter.Client) error {
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		c.Pwd = pwd
+		return nil
+	}))
+	if err != nil {
+		return nil, err
+	}
+	path, _ := strings.CutPrefix(req.Url, "file::")
+	filename := filepath.Base(path)
+	data, err := os.ReadFile(filepath.Join(tmpDir, filename))
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +78,7 @@ func (j *jsonInputer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.ReadRe
 	}
 	return &v1.ReadResponse{
 		Data: map[string]*structpb.Struct{
-			"vars.json": str.GetStructValue(),
+			filename: str.GetStructValue(),
 		},
 	}, nil
 }

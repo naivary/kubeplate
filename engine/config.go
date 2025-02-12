@@ -1,11 +1,9 @@
 package engine
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
-	"github.com/naivary/kubeplate/sdk/outputer"
 )
 
 type FuncConfig struct {
@@ -18,12 +16,6 @@ type Config struct {
 	Funcs []FuncConfig `yaml:"funcs"`
 }
 
-type Engine interface {
-	AddPlugin(path string) error
-
-	Execute(out outputer.Outputer, data any) error
-}
-
 func newConfig(path string) (*Config, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -33,6 +25,5 @@ func newConfig(path string) (*Config, error) {
 	if err := yaml.Unmarshal(content, config); err != nil {
 		return nil, err
 	}
-	fmt.Println(config)
 	return config, nil
 }
