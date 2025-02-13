@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
 	"net/url"
 	"os"
@@ -12,16 +11,15 @@ import (
 	"github.com/hashicorp/go-getter"
 )
 
-func Get(url string, force bool) (string, error) {
+func Get(url string, force bool) (string, bool, error) {
 	const local = ""
-	// TODO: Check if plugin is already existing
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	pwd, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	opt := func(c *getter.Client) error {
 		c.Pwd = pwd
@@ -29,19 +27,21 @@ func Get(url string, force bool) (string, error) {
 	}
 	urlDir, err := dstDir(url)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	dst := filepath.Join(home, ".kubeplate", urlDir)
 	isExisting, err := isPluginExisting(dst)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if isExisting && !force && urlDir != local {
-		fmt.Printf("plugin `%s` already existing. Skipping download...\n", dst)
-		return dst, nil
+		return dst, false, nil
 	}
 	err = getter.GetAny(dst, url, opt)
-	return dst, err
+	if err != nil {
+		return "", false, err
+	}
+	return dst, true, nil
 }
 
 func isPluginExisting(dst string) (bool, error) {

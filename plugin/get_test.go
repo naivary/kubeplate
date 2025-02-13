@@ -15,28 +15,39 @@ func TestGet(t *testing.T) {
 		t.Error(err)
 	}
 	tests := []struct {
-		name  string
-		url   string
-		force bool
-		err   bool
+		name           string
+		url            string
+		force          bool
+		shouldDownload bool
+		err            bool
 	}{
 		{
-			name: "plugin:local file",
-			url:  "./examples/plugin/inputer/json",
+			name:           "plugin:local file",
+			url:            "./examples/plugin/inputer/json",
+			shouldDownload: true,
 		},
 		{
-			name: "plugin:git repo",
-			url:  "git::http://github.com/hashicorp/go-getter.git?ref=v1.7.8",
+			name:           "plugin:git repo",
+			url:            "git::http://github.com/hashicorp/go-getter.git?ref=v1.7.8",
+			shouldDownload: true,
+		},
+		{
+			name:           "double download check",
+			url:            "git::http://github.com/hashicorp/go-getter.git?ref=v1.7.8",
+			shouldDownload: false,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			path, err := Get(tc.url, tc.force)
+			path, isDownloaded, err := Get(tc.url, tc.force)
 			if err != nil && !tc.err {
 				t.Error(err)
 			}
 			t.Logf("path: %s\n", path)
+			if tc.shouldDownload != isDownloaded {
+				t.Fatalf("expected plugin to download. Got: %t\n", isDownloaded)
+			}
 		})
 	}
 }
