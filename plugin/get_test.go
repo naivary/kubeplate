@@ -15,9 +15,10 @@ func TestGet(t *testing.T) {
 		t.Error(err)
 	}
 	tests := []struct {
-		name string
-		url  string
-		err  bool
+		name  string
+		url   string
+		force bool
+		err   bool
 	}{
 		{
 			name: "plugin:local file",
@@ -31,7 +32,7 @@ func TestGet(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			path, err := Get(tc.url)
+			path, err := Get(tc.url, tc.force)
 			if err != nil && !tc.err {
 				t.Error(err)
 			}
@@ -47,14 +48,9 @@ func TestDetectDir(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "local file",
-			url:      "foo/bar/inputer_binary",
-			expected: "foo/bar",
-		},
-		{
 			name:     "local file without prefix",
 			url:      "./foo/bar/relative/inputer_binary",
-			expected: "foo/bar/relative",
+			expected: "",
 		},
 		{
 			name:     "s3 bucket",
@@ -76,11 +72,16 @@ func TestDetectDir(t *testing.T) {
 			url:      "git::http://github.com/mitchellh/vagrant.git",
 			expected: "github.com/mitchellh/vagrant",
 		},
+		{
+			name:     "git subdir",
+			url:      "git::https://github.com/hashicorp/vagrant.git//bin",
+			expected: "github.com/hashicorp/vagrant",
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			dir, err := detectDir(tc.url)
+			dir, err := dstDir(tc.url)
 			if err != nil {
 				t.Error(err)
 			}

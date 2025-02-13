@@ -1,17 +1,20 @@
 package plugin
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-getter"
 )
 
-func Get(url string) (string, error) {
+func Get(url string, force bool) (string, error) {
+	const local = ""
+	// TODO: Check if plugin is already existing
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -24,16 +27,35 @@ func Get(url string) (string, error) {
 		c.Pwd = pwd
 		return nil
 	}
-	urlDir, err := detectDir(url)
+	urlDir, err := dstDir(url)
 	if err != nil {
 		return "", err
 	}
 	dst := filepath.Join(home, ".kubeplate", urlDir)
+	isExisting, err := isPluginExisting(dst)
+	if err != nil {
+		return "", err
+	}
+	if isExisting && !force && urlDir != local {
+		fmt.Printf("plugin `%s` already existing. Skipping download...\n", dst)
+		return dst, nil
+	}
 	err = getter.GetAny(dst, url, opt)
 	return dst, err
 }
 
-func detectDir(getterURL string) (string, error) {
+func isPluginExisting(dst string) (bool, error) {
+	_, err := os.Stat(dst)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	return false, err
+}
+
+func dstDir(getterURL string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -42,27 +64,30 @@ func detectDir(getterURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	u, err := url.Parse(replacePrefix(detected, pwd))
+	httpsPrefixed := replacePrefix(detected)
+	noSubDir := removeSubDir(httpsPrefixed)
+	u, err := url.Parse(noSubDir)
 	if err != nil {
 		return "", err
 	}
-	return url.JoinPath(u.Host, removeExt(u.Path))
+	version := u.Query().Get("ref")
+	return url.JoinPath(u.Host, removeExt(u.Path), version)
 }
 
-func replacePrefix(url, pwd string) string {
+func replacePrefix(url string) string {
 	const https = "https://"
-	absolutePath := fmt.Sprintf("file://%s", pwd)
+	const local = "local"
 	switch {
-	case strings.HasPrefix(url, absolutePath):
-		return path.Dir(strings.Replace(url, absolutePath, https, 1))
 	case strings.HasPrefix(url, "file://"):
-		return path.Dir(strings.Replace(url, "file://", https, 1))
+		return ""
 	case strings.HasPrefix(url, "s3::https://"):
 		return strings.Replace(url, "s3::https://", https, 1)
 	case strings.HasPrefix(url, "git::ssh://git@"):
 		return strings.Replace(url, "git::ssh://git@", https, 1)
 	case strings.HasPrefix(url, "git::http://"):
 		return strings.Replace(url, "git::http://", https, 1)
+	case strings.HasPrefix(url, "git::https://"):
+		return strings.Replace(url, "git::https://", https, 1)
 	default:
 		return ""
 	}
@@ -74,4 +99,13 @@ func removeExt(path string) string {
 		return path
 	}
 	return strings.TrimSuffix(path, ext)
+}
+
+func removeSubDir(url string) string {
+	splitted := strings.Split(url, "//")
+	if len(splitted) < 3 {
+		return url
+	}
+	splitted = splitted[:len(splitted)-1]
+	return strings.Join(splitted, "//")
 }
