@@ -11,8 +11,9 @@ import (
 	"github.com/hashicorp/go-getter"
 )
 
+const local = ""
+
 func Get(url string, force bool) (string, bool, error) {
-	const local = ""
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", false, err
@@ -76,10 +77,9 @@ func dstDir(getterURL string) (string, error) {
 
 func replacePrefix(url string) string {
 	const https = "https://"
-	const local = "local"
 	switch {
 	case strings.HasPrefix(url, "file://"):
-		return ""
+		return local
 	case strings.HasPrefix(url, "s3::https://"):
 		return strings.Replace(url, "s3::https://", https, 1)
 	case strings.HasPrefix(url, "git::ssh://git@"):
