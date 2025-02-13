@@ -1,7 +1,10 @@
 package plugin
 
 import (
+	"fmt"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -9,7 +12,6 @@ import (
 )
 
 func Get(url string) (string, error) {
-	// TODO: check if URL already exists localy or not
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -22,37 +24,54 @@ func Get(url string) (string, error) {
 		c.Pwd = pwd
 		return nil
 	}
-	dst := filepath.Join(home, ".kubeplate")
+	urlDir, err := detectDir(url)
+	if err != nil {
+		return "", err
+	}
+	dst := filepath.Join(home, ".kubeplate", urlDir)
 	err = getter.GetAny(dst, url, opt)
 	return dst, err
 }
 
-func detectDir(url string) (string, error) {
-	// TODO: Bring every possible getter path to a http(s):// path 
-	// just to use url.Parse and get the url.Path to use as a directory
-	// structure
+func detectDir(getterURL string) (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
-	detected, err := getter.Detect(url, pwd, getter.Detectors)
+	detected, err := getter.Detect(getterURL, pwd, getter.Detectors)
 	if err != nil {
 		return "", err
 	}
-	return detected, nil
+	u, err := url.Parse(replacePrefix(detected, pwd))
+	if err != nil {
+		return "", err
+	}
+	return url.JoinPath(u.Host, removeExt(u.Path))
 }
 
-func cutPrefix(url string) (string, bool) {
+func replacePrefix(url, pwd string) string {
+	const https = "https://"
+	absolutePath := fmt.Sprintf("file://%s", pwd)
 	switch {
-	case strings.HasPrefix(url, "https://") || strings.HasPrefix(url, "http://"):
-		return url, true
+	case strings.HasPrefix(url, absolutePath):
+		return path.Dir(strings.Replace(url, absolutePath, https, 1))
 	case strings.HasPrefix(url, "file://"):
-		return strings.CutPrefix(url, "file://")
-	case strings.HasPrefix(url, "git://"):
-		return strings.CutPrefix(url, "git://")
-	case strings.HasPrefix(url, "s3://"):
-		return strings.CutPrefix(url, "file://")
+		return path.Dir(strings.Replace(url, "file://", https, 1))
+	case strings.HasPrefix(url, "s3::https://"):
+		return strings.Replace(url, "s3::https://", https, 1)
+	case strings.HasPrefix(url, "git::ssh://git@"):
+		return strings.Replace(url, "git::ssh://git@", https, 1)
+	case strings.HasPrefix(url, "git::http://"):
+		return strings.Replace(url, "git::http://", https, 1)
 	default:
-		return "UKNOWN", false
+		return ""
 	}
+}
+
+func removeExt(path string) string {
+	ext := filepath.Ext(path)
+	if ext == "" {
+		return path
+	}
+	return strings.TrimSuffix(path, ext)
 }

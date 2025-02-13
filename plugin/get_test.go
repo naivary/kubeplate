@@ -1,10 +1,19 @@
 package plugin
 
 import (
+	"os"
+	"path"
+	"runtime"
 	"testing"
 )
 
 func TestGet(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "..")
+	err := os.Chdir(dir)
+	if err != nil {
+		t.Error(err)
+	}
 	tests := []struct {
 		name string
 		url  string
@@ -12,7 +21,7 @@ func TestGet(t *testing.T) {
 	}{
 		{
 			name: "plugin:local file",
-			url:  "file::../examples/plugin/inputer/json",
+			url:  "./examples/plugin/inputer/json",
 		},
 		{
 			name: "plugin:git repo",
@@ -39,18 +48,18 @@ func TestDetectDir(t *testing.T) {
 	}{
 		{
 			name:     "local file",
-			url:      "file://foo/bar/inputer_binary",
-			expected: "bar",
+			url:      "foo/bar/inputer_binary",
+			expected: "foo/bar",
 		},
 		{
 			name:     "local file without prefix",
-			url:      "./foo/bar/inputer_binary",
-			expected: "bar",
+			url:      "./foo/bar/relative/inputer_binary",
+			expected: "foo/bar/relative",
 		},
 		{
 			name:     "s3 bucket",
 			url:      "bucket.s3.amazonaws.com/foo",
-			expected: "bucket.s3.amazonaws.com/foo",
+			expected: "s3.amazonaws.com/bucket/foo",
 		},
 		{
 			name:     "git repo ssh addresses",
@@ -60,7 +69,7 @@ func TestDetectDir(t *testing.T) {
 		{
 			name:     "git scp style",
 			url:      "git@github.com:naivary/Bachelorarbeit.git",
-			expected: "example.com/foo/bar",
+			expected: "github.com/naivary/Bachelorarbeit",
 		},
 		{
 			name:     "git http",
@@ -75,7 +84,9 @@ func TestDetectDir(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			t.Log(dir)
+			if dir != tc.expected {
+				t.Fatalf("expected: %s; got: %s\n", tc.expected, dir)
+			}
 		})
 	}
 }
